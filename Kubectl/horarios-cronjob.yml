@@ -1,0 +1,30 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: horarios-cronjob
+  namespace: casafeudal
+spec:
+  schedule: "0 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: horarios
+            image: casafeudal/horas:1.2.1
+            env:
+            - name: IDPERIODISTA
+              valueFrom:
+                secretKeyRef:
+                  name: horarios-secrets
+                  key: idperiodista
+            - name: CONTRASENA
+              valueFrom:
+                secretKeyRef:
+                  name: horarios-secrets
+                  key: contrasena
+          initContainers:
+          - name: download-horarios
+            image: curlimages/curl
+            command: ["curl", "-O", "https://www.generochico.com/horariosjuergasdelviejo.csv"]
+          restartPolicy: OnFailure

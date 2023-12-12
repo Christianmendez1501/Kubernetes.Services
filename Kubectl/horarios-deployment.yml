@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: horarios-deployment
+  namespace: casafeudal
+spec:
+  replicas: 100
+  selector:
+    matchLabels:
+      app: horarios
+  template:
+    metadata:
+      labels:
+        app: horarios
+    spec:
+      containers:
+      - name: horarios
+        image: casafeudal/horas:1.2.1
+        ports:
+        - containerPort: 5045
+        env:
+        - name: IDPERIODISTA
+          valueFrom:
+            secretKeyRef:
+              name: horarios-secrets
+              key: idperiodista
+        - name: CONTRASENA
+          valueFrom:
+            secretKeyRef:
+              name: horarios-secrets
+              key: contrasena
+      initContainers:
+      - name: download-horarios
+        image: curlimages/curl
+        command: ["curl", "-O", "https://www.generochico.com/horariosjuergasdelviejo.csv"]
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 25%
+      maxSurge: 25%
